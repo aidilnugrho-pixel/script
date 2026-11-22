@@ -1,6 +1,6 @@
 -- ============================================
 -- THROW A SPEAR FOR FISH
--- Training + Upgrade Pull + Auto Throw
+-- Training + Upgrade (100s) + Throw + Store + TP
 -- ============================================
 
 local Players = game:GetService("Players")
@@ -19,8 +19,10 @@ end
 local PullUpTap = Remotes:WaitForChild("PullUpTap", 30)
 local UpgradePullUp = Remotes:WaitForChild("UpgradePullUp", 30)
 local SetAutoThrow = Remotes:WaitForChild("SetAutoThrow", 30)
+local Throw = Remotes:WaitForChild("Throw", 30)
+local HeldAction = Remotes:WaitForChild("HeldAction", 30)
 
-if not PullUpTap or not UpgradePullUp or not SetAutoThrow then
+if not PullUpTap or not UpgradePullUp or not SetAutoThrow or not Throw or not HeldAction then
     warn("[SpearFish] Salah satu remote tidak ditemukan!")
     return
 end
@@ -29,15 +31,22 @@ end
 local autoTraining = false
 local autoUpgrade = false
 local autoThrow = false
+local autoStore = false
+local autoTP = false
 
 local trainingLoop = nil
 local upgradeLoop = nil
 local throwLoop = nil
+local storeLoop = nil
+local tpLoop = nil
 
 -- ===== SETTINGS =====
 local TRAINING_DELAY = 0.1
-local UPGRADE_DELAY = 1
+local UPGRADE_DELAY = 100
 local THROW_DELAY = 0.5
+local STORE_DELAY = 0.5
+local TP_POSITION = Vector3.new(10, 8, -27)
+local TP_DELAY = 1
 
 -- ===== AUTO TRAINING =====
 local function StartAutoTraining()
@@ -62,7 +71,7 @@ local function StopAutoTraining()
     trainingLoop = nil
 end
 
--- ===== AUTO UPGRADE PULL =====
+-- ===== AUTO UPGRADE PULL (100s) =====
 local function StartAutoUpgrade()
     if upgradeLoop then return end
     autoUpgrade = true
@@ -71,7 +80,11 @@ local function StartAutoUpgrade()
             pcall(function()
                 UpgradePullUp:InvokeServer()
             end)
-            task.wait(UPGRADE_DELAY)
+            local elapsed = 0
+            while autoUpgrade and elapsed < UPGRADE_DELAY do
+                task.wait(0.5)
+                elapsed = elapsed + 0.5
+            end
         end
         upgradeLoop = nil
     end)
@@ -91,6 +104,9 @@ local function StartAutoThrow()
             pcall(function()
                 SetAutoThrow:InvokeServer(true)
             end)
+            pcall(function()
+                Throw:InvokeServer(0.99)
+            end)
             task.wait(THROW_DELAY)
         end
         throwLoop = nil
@@ -103,6 +119,54 @@ local function StopAutoThrow()
     pcall(function()
         SetAutoThrow:InvokeServer(false)
     end)
+end
+
+-- ===== AUTO STORE (HeldAction "store") =====
+local function StartAutoStore()
+    if storeLoop then return end
+    autoStore = true
+    storeLoop = task.spawn(function()
+        while autoStore do
+            pcall(function()
+                HeldAction:InvokeServer("store")
+            end)
+            task.wait(STORE_DELAY)
+        end
+        storeLoop = nil
+    end)
+end
+
+local function StopAutoStore()
+    autoStore = false
+    storeLoop = nil
+end
+
+-- ===== AUTO TP =====
+local function AutoTP()
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    pcall(function()
+        hrp.CFrame = CFrame.new(TP_POSITION)
+    end)
+end
+
+local function StartAutoTP()
+    if tpLoop then return end
+    autoTP = true
+    tpLoop = task.spawn(function()
+        while autoTP do
+            AutoTP()
+            task.wait(TP_DELAY)
+        end
+        tpLoop = nil
+    end)
+end
+
+local function StopAutoTP()
+    autoTP = false
+    tpLoop = nil
 end
 
 -- ===== GUI =====
@@ -136,8 +200,8 @@ bc.CornerRadius = UDim.new(1, 0)
 
 -- Main
 local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 240, 0, 200)
-Main.Position = UDim2.new(0.5, -120, 0.5, -100)
+Main.Size = UDim2.new(0, 240, 0, 338)
+Main.Position = UDim2.new(0.5, -120, 0.5, -169)
 Main.BackgroundColor3 = Color3.fromRGB(25, 22, 40)
 Main.BorderSizePixel = 2
 Main.BorderColor3 = Color3.fromRGB(255, 180, 0)
@@ -316,6 +380,14 @@ CreateToggle("AUTO THROW", 138, function(on)
     if on then StartAutoThrow() else StopAutoThrow() end
 end)
 
+CreateToggle("AUTO STORE", 186, function(on)
+    if on then StartAutoStore() else StopAutoStore() end
+end)
+
+CreateToggle("AUTO TP (10,8,-27)", 234, function(on)
+    if on then StartAutoTP() else StopAutoTP() end
+end)
+
 -- ===== MINIMIZE =====
 local function ToggleMinimize()
     Main.Visible = not Main.Visible
@@ -329,6 +401,8 @@ CloseBtn.MouseButton1Click:Connect(function()
     StopAutoTraining()
     StopAutoUpgrade()
     StopAutoThrow()
+    StopAutoStore()
+    StopAutoTP()
     screenGui:Destroy()
 end)
 
@@ -364,4 +438,4 @@ bubble.InputEnded:Connect(function(input)
     end
 end)
 
-print("[SpearFish] Loaded OK - Training + Upgrade + Throw (0.5s)")
+print("[SpearFish] Loaded OK - Training + Upgrade(100s) + Throw(SetAutoThrow+Throw) + Store + TP")
