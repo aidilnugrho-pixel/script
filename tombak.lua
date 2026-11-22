@@ -1,11 +1,12 @@
 -- ============================================
 -- THROW A SPEAR FOR FISH
--- Training + Upgrade (100s) + Throw + Store + TP
+-- Training + Upgrade (100s) + Throw + Store + TP (2 pos) + Anti-AFK
 -- ============================================
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local VirtualUser = game:GetService("VirtualUser")
 
 local player = Players.LocalPlayer
 
@@ -27,6 +28,17 @@ if not PullUpTap or not UpgradePullUp or not SetAutoThrow or not Throw or not He
     return
 end
 
+-- ===== ANTI AFK (backend) =====
+task.spawn(function()
+    while true do
+        pcall(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+        task.wait(60)
+    end
+end)
+
 -- ===== STATE =====
 local autoTraining = false
 local autoUpgrade = false
@@ -39,13 +51,17 @@ local upgradeLoop = nil
 local throwLoop = nil
 local storeLoop = nil
 local tpLoop = nil
+local tpIndex = 1
 
 -- ===== SETTINGS =====
 local TRAINING_DELAY = 0.1
 local UPGRADE_DELAY = 100
 local THROW_DELAY = 0.5
 local STORE_DELAY = 0.5
-local TP_POSITION = Vector3.new(10, 8, -27)
+local TP_POSITIONS = {
+    Vector3.new(10, 8, -27),
+    Vector3.new(12, 7, -13),
+}
 local TP_DELAY = 1
 
 -- ===== AUTO TRAINING =====
@@ -54,12 +70,8 @@ local function StartAutoTraining()
     autoTraining = true
     trainingLoop = task.spawn(function()
         while autoTraining do
-            pcall(function()
-                PullUpTap:FireServer()
-            end)
-            pcall(function()
-                PullUpTap:FireServer("bubble")
-            end)
+            pcall(function() PullUpTap:FireServer() end)
+            pcall(function() PullUpTap:FireServer("bubble") end)
             task.wait(TRAINING_DELAY)
         end
         trainingLoop = nil
@@ -77,9 +89,7 @@ local function StartAutoUpgrade()
     autoUpgrade = true
     upgradeLoop = task.spawn(function()
         while autoUpgrade do
-            pcall(function()
-                UpgradePullUp:InvokeServer()
-            end)
+            pcall(function() UpgradePullUp:InvokeServer() end)
             local elapsed = 0
             while autoUpgrade and elapsed < UPGRADE_DELAY do
                 task.wait(0.5)
@@ -101,12 +111,8 @@ local function StartAutoThrow()
     autoThrow = true
     throwLoop = task.spawn(function()
         while autoThrow do
-            pcall(function()
-                SetAutoThrow:InvokeServer(true)
-            end)
-            pcall(function()
-                Throw:InvokeServer(0.99)
-            end)
+            pcall(function() SetAutoThrow:InvokeServer(true) end)
+            pcall(function() Throw:InvokeServer(0.99) end)
             task.wait(THROW_DELAY)
         end
         throwLoop = nil
@@ -116,20 +122,16 @@ end
 local function StopAutoThrow()
     autoThrow = false
     throwLoop = nil
-    pcall(function()
-        SetAutoThrow:InvokeServer(false)
-    end)
+    pcall(function() SetAutoThrow:InvokeServer(false) end)
 end
 
--- ===== AUTO STORE (HeldAction "store") =====
+-- ===== AUTO STORE =====
 local function StartAutoStore()
     if storeLoop then return end
     autoStore = true
     storeLoop = task.spawn(function()
         while autoStore do
-            pcall(function()
-                HeldAction:InvokeServer("store")
-            end)
+            pcall(function() HeldAction:InvokeServer("store") end)
             task.wait(STORE_DELAY)
         end
         storeLoop = nil
@@ -141,20 +143,21 @@ local function StopAutoStore()
     storeLoop = nil
 end
 
--- ===== AUTO TP =====
+-- ===== AUTO TP (cycle 2 posisi) =====
 local function AutoTP()
     local char = player.Character
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
-    pcall(function()
-        hrp.CFrame = CFrame.new(TP_POSITION)
-    end)
+    local pos = TP_POSITIONS[tpIndex]
+    pcall(function() hrp.CFrame = CFrame.new(pos) end)
+    tpIndex = tpIndex % #TP_POSITIONS + 1
 end
 
 local function StartAutoTP()
     if tpLoop then return end
     autoTP = true
+    tpIndex = 1
     tpLoop = task.spawn(function()
         while autoTP do
             AutoTP()
@@ -384,7 +387,7 @@ CreateToggle("AUTO STORE", 186, function(on)
     if on then StartAutoStore() else StopAutoStore() end
 end)
 
-CreateToggle("AUTO TP (10,8,-27)", 234, function(on)
+CreateToggle("AUTO TP (2 POS)", 234, function(on)
     if on then StartAutoTP() else StopAutoTP() end
 end)
 
@@ -438,4 +441,4 @@ bubble.InputEnded:Connect(function(input)
     end
 end)
 
-print("[SpearFish] Loaded OK - Training + Upgrade(100s) + Throw(SetAutoThrow+Throw) + Store + TP")
+print("[SpearFish] Loaded OK - Training + Upgrade(100s) + Throw + Store + TP(2 pos) + AntiAFK")
