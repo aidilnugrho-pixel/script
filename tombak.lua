@@ -1,6 +1,6 @@
 -- ============================================
 -- THROW A SPEAR FOR FISH
--- Training + Upgrade (100s) + Throw + Store + TP (2 pos) + Anti-AFK
+-- Training + Upgrade (100s) + Throw + Store + TP (2 pos, 0.5s) + Anti-AFK
 -- ============================================
 
 local Players = game:GetService("Players")
@@ -19,11 +19,10 @@ end
 
 local PullUpTap = Remotes:WaitForChild("PullUpTap", 30)
 local UpgradePullUp = Remotes:WaitForChild("UpgradePullUp", 30)
-local SetAutoThrow = Remotes:WaitForChild("SetAutoThrow", 30)
 local Throw = Remotes:WaitForChild("Throw", 30)
 local HeldAction = Remotes:WaitForChild("HeldAction", 30)
 
-if not PullUpTap or not UpgradePullUp or not SetAutoThrow or not Throw or not HeldAction then
+if not PullUpTap or not UpgradePullUp or not Throw or not HeldAction then
     warn("[SpearFish] Salah satu remote tidak ditemukan!")
     return
 end
@@ -57,12 +56,13 @@ local tpIndex = 1
 local TRAINING_DELAY = 0.1
 local UPGRADE_DELAY = 100
 local THROW_DELAY = 0.5
+local THROW_POWER = 0.8943486253265291
 local STORE_DELAY = 0.5
 local TP_POSITIONS = {
     Vector3.new(10, 8, -27),
     Vector3.new(12, 7, -13),
 }
-local TP_DELAY = 1
+local TP_DELAY = 0.5
 
 -- ===== AUTO TRAINING =====
 local function StartAutoTraining()
@@ -105,14 +105,15 @@ local function StopAutoUpgrade()
     upgradeLoop = nil
 end
 
--- ===== AUTO THROW =====
+-- ===== AUTO THROW (hanya Throw) =====
 local function StartAutoThrow()
     if throwLoop then return end
     autoThrow = true
     throwLoop = task.spawn(function()
         while autoThrow do
-            pcall(function() SetAutoThrow:InvokeServer(true) end)
-            pcall(function() Throw:InvokeServer(0.99) end)
+            pcall(function()
+                Throw:InvokeServer(THROW_POWER)
+            end)
             task.wait(THROW_DELAY)
         end
         throwLoop = nil
@@ -122,7 +123,6 @@ end
 local function StopAutoThrow()
     autoThrow = false
     throwLoop = nil
-    pcall(function() SetAutoThrow:InvokeServer(false) end)
 end
 
 -- ===== AUTO STORE =====
@@ -143,7 +143,7 @@ local function StopAutoStore()
     storeLoop = nil
 end
 
--- ===== AUTO TP (cycle 2 posisi) =====
+-- ===== AUTO TP (cycle 2 posisi, 0.5s) =====
 local function AutoTP()
     local char = player.Character
     if not char then return end
@@ -441,4 +441,4 @@ bubble.InputEnded:Connect(function(input)
     end
 end)
 
-print("[SpearFish] Loaded OK - Training + Upgrade(100s) + Throw + Store + TP(2 pos) + AntiAFK")
+print("[SpearFish] Loaded OK - Training + Upgrade(100s) + Throw(0.5s) + Store + TP(0.5s, 2 pos) + AntiAFK")
