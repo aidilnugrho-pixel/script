@@ -1,6 +1,6 @@
 -- ============================================
 -- THROW A SPEAR FOR FISH
--- Training + Upgrade (100s) + Throw + Store + TP (2 pos, 0.5s) + Anti-AFK
+-- Training + Upgrade (100s) + Auto Farm (Throw+Store+TP) + Anti-AFK
 -- ============================================
 
 local Players = game:GetService("Players")
@@ -105,70 +105,64 @@ local function StopAutoUpgrade()
     upgradeLoop = nil
 end
 
--- ===== AUTO THROW =====
-local function StartAutoThrow()
-    if throwLoop then return end
-    autoThrow = true
-    throwLoop = task.spawn(function()
-        while autoThrow do
-            pcall(function()
-                Throw:InvokeServer(THROW_POWER)
-            end)
-            task.wait(THROW_DELAY)
-        end
-        throwLoop = nil
-    end)
+-- ===== AUTO FARM (Throw + Store + TP) =====
+local function StartAutoFarm()
+    -- Throw loop
+    if not throwLoop then
+        autoThrow = true
+        throwLoop = task.spawn(function()
+            while autoThrow do
+                pcall(function()
+                    Throw:InvokeServer(THROW_POWER)
+                end)
+                task.wait(THROW_DELAY)
+            end
+            throwLoop = nil
+        end)
+    end
+
+    -- Store loop
+    if not storeLoop then
+        autoStore = true
+        storeLoop = task.spawn(function()
+            while autoStore do
+                pcall(function()
+                    HeldAction:InvokeServer("store")
+                end)
+                task.wait(STORE_DELAY)
+            end
+            storeLoop = nil
+        end)
+    end
+
+    -- TP loop
+    if not tpLoop then
+        autoTP = true
+        tpIndex = 1
+        tpLoop = task.spawn(function()
+            while autoTP do
+                local char = player.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    local pos = TP_POSITIONS[tpIndex]
+                    pcall(function()
+                        hrp.CFrame = CFrame.new(pos)
+                    end)
+                    tpIndex = tpIndex % #TP_POSITIONS + 1
+                end
+                task.wait(TP_DELAY)
+            end
+            tpLoop = nil
+        end)
+    end
 end
 
-local function StopAutoThrow()
+local function StopAutoFarm()
     autoThrow = false
-    throwLoop = nil
-end
-
--- ===== AUTO STORE =====
-local function StartAutoStore()
-    if storeLoop then return end
-    autoStore = true
-    storeLoop = task.spawn(function()
-        while autoStore do
-            pcall(function() HeldAction:InvokeServer("store") end)
-            task.wait(STORE_DELAY)
-        end
-        storeLoop = nil
-    end)
-end
-
-local function StopAutoStore()
     autoStore = false
-    storeLoop = nil
-end
-
--- ===== AUTO TP (cycle 2 posisi) =====
-local function AutoTP()
-    local char = player.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    local pos = TP_POSITIONS[tpIndex]
-    pcall(function() hrp.CFrame = CFrame.new(pos) end)
-    tpIndex = tpIndex % #TP_POSITIONS + 1
-end
-
-local function StartAutoTP()
-    if tpLoop then return end
-    autoTP = true
-    tpIndex = 1
-    tpLoop = task.spawn(function()
-        while autoTP do
-            AutoTP()
-            task.wait(TP_DELAY)
-        end
-        tpLoop = nil
-    end)
-end
-
-local function StopAutoTP()
     autoTP = false
+    throwLoop = nil
+    storeLoop = nil
     tpLoop = nil
 end
 
@@ -205,8 +199,8 @@ bc.CornerRadius = UDim.new(1, 0)
 
 -- Main
 local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 240, 0, 338)
-Main.Position = UDim2.new(0.5, -120, 0.5, -169)
+Main.Size = UDim2.new(0, 240, 0, 200)
+Main.Position = UDim2.new(0.5, -120, 0.5, -100)
 Main.BackgroundColor3 = Color3.fromRGB(25, 22, 40)
 Main.BorderSizePixel = 2
 Main.BorderColor3 = Color3.fromRGB(255, 180, 0)
@@ -388,16 +382,8 @@ CreateToggle("AUTO UPGRADE PULL", 90, function(on)
     if on then StartAutoUpgrade() else StopAutoUpgrade() end
 end)
 
-CreateToggle("AUTO THROW", 138, function(on)
-    if on then StartAutoThrow() else StopAutoThrow() end
-end)
-
-CreateToggle("AUTO STORE", 186, function(on)
-    if on then StartAutoStore() else StopAutoStore() end
-end)
-
-CreateToggle("AUTO TP (2 POS)", 234, function(on)
-    if on then StartAutoTP() else StopAutoTP() end
+CreateToggle("AUTO FARM", 138, function(on)
+    if on then StartAutoFarm() else StopAutoFarm() end
 end)
 
 -- ===== MINIMIZE =====
@@ -412,9 +398,7 @@ bubble.MouseButton1Click:Connect(ToggleMinimize)
 CloseBtn.MouseButton1Click:Connect(function()
     StopAutoTraining()
     StopAutoUpgrade()
-    StopAutoThrow()
-    StopAutoStore()
-    StopAutoTP()
+    StopAutoFarm()
     screenGui:Destroy()
 end)
 
@@ -450,4 +434,4 @@ bubble.InputEnded:Connect(function(input)
     end
 end)
 
-print("[SpearFish] Loaded OK - Training + Upgrade(100s) + Throw(0.5s) + Store + TP(0.5s, 2 pos) + AntiAFK")
+print("[SpearFish] Loaded OK - Training + Upgrade(100s) + AutoFarm(Throw+Store+TP) + AntiAFK")
