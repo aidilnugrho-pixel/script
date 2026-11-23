@@ -105,7 +105,7 @@ local function StopAutoUpgrade()
     upgradeLoop = nil
 end
 
--- ===== AUTO THROW (hanya Throw) =====
+-- ===== AUTO THROW =====
 local function StartAutoThrow()
     if throwLoop then return end
     autoThrow = true
@@ -143,7 +143,7 @@ local function StopAutoStore()
     storeLoop = nil
 end
 
--- ===== AUTO TP (cycle 2 posisi, 0.5s) =====
+-- ===== AUTO TP (cycle 2 posisi) =====
 local function AutoTP()
     local char = player.Character
     if not char then return end
@@ -182,6 +182,8 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "SpearFish_Auto"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 999
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
 -- Bubble
@@ -195,7 +197,7 @@ bubble.TextScaled = true
 bubble.Font = Enum.Font.FredokaOne
 bubble.BorderSizePixel = 0
 bubble.Visible = false
-bubble.ZIndex = 50
+bubble.ZIndex = 200
 bubble.Parent = screenGui
 
 local bc = Instance.new("UICorner", bubble)
@@ -211,6 +213,7 @@ Main.BorderColor3 = Color3.fromRGB(255, 180, 0)
 Main.Active = true
 Main.Draggable = true
 Main.ClipsDescendants = true
+Main.ZIndex = 100
 Main.Parent = screenGui
 
 local mc = Instance.new("UICorner", Main)
@@ -221,6 +224,7 @@ local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 34)
 Header.BackgroundColor3 = Color3.fromRGB(40, 35, 60)
 Header.BorderSizePixel = 0
+Header.ZIndex = 101
 Header.Parent = Main
 
 local hc = Instance.new("UICorner", Header)
@@ -235,6 +239,7 @@ Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.FredokaOne
 Title.TextSize = 11
 Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.ZIndex = 102
 Title.Parent = Header
 
 local MinBtn = Instance.new("TextButton")
@@ -246,6 +251,7 @@ MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 MinBtn.Font = Enum.Font.GothamBold
 MinBtn.TextSize = 18
 MinBtn.BorderSizePixel = 0
+MinBtn.ZIndex = 103
 MinBtn.Parent = Header
 
 local minc = Instance.new("UICorner", MinBtn)
@@ -260,6 +266,7 @@ CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextSize = 14
 CloseBtn.BorderSizePixel = 0
+CloseBtn.ZIndex = 103
 CloseBtn.Parent = Header
 
 local cc = Instance.new("UICorner", CloseBtn)
@@ -273,6 +280,7 @@ local function CreateToggle(name, yPos, callback)
     frame.BackgroundColor3 = Color3.fromRGB(35, 30, 55)
     frame.BorderSizePixel = 1
     frame.BorderColor3 = Color3.fromRGB(60, 55, 80)
+    frame.ZIndex = 101
     frame.Parent = Main
 
     local fc = Instance.new("UICorner", frame)
@@ -287,6 +295,7 @@ local function CreateToggle(name, yPos, callback)
     label.Font = Enum.Font.FredokaOne
     label.TextSize = 12
     label.TextXAlignment = Enum.TextXAlignment.Left
+    label.ZIndex = 102
     label.Parent = frame
 
     local switchBg = Instance.new("TextButton")
@@ -297,7 +306,7 @@ local function CreateToggle(name, yPos, callback)
     switchBg.BorderColor3 = Color3.fromRGB(150, 150, 160)
     switchBg.Text = ""
     switchBg.AutoButtonColor = false
-    switchBg.ZIndex = 15
+    switchBg.ZIndex = 105
     switchBg.Parent = frame
 
     local sc = Instance.new("UICorner", switchBg)
@@ -311,7 +320,7 @@ local function CreateToggle(name, yPos, callback)
     offLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     offLabel.Font = Enum.Font.FredokaOne
     offLabel.TextSize = 8
-    offLabel.ZIndex = 16
+    offLabel.ZIndex = 106
     offLabel.Parent = switchBg
 
     local onLabel = Instance.new("TextLabel")
@@ -322,7 +331,7 @@ local function CreateToggle(name, yPos, callback)
     onLabel.TextColor3 = Color3.fromRGB(150, 150, 160)
     onLabel.Font = Enum.Font.FredokaOne
     onLabel.TextSize = 8
-    onLabel.ZIndex = 16
+    onLabel.ZIndex = 106
     onLabel.Parent = switchBg
 
     local knob = Instance.new("TextButton")
@@ -332,7 +341,7 @@ local function CreateToggle(name, yPos, callback)
     knob.BorderSizePixel = 0
     knob.Text = ""
     knob.AutoButtonColor = false
-    knob.ZIndex = 20
+    knob.ZIndex = 110
     knob.Parent = switchBg
 
     local kc = Instance.new("UICorner", knob)
