@@ -62,9 +62,9 @@ local tpIndex = 1
 -- ===== SETTINGS =====
 local TRAINING_DELAY = 0.1
 local UPGRADE_DELAY = 100
-local THROW_DELAY = 0.5
+local THROW_DELAY = 0.2
 local THROW_POWER = 0.8943486253265291
-local STORE_DELAY = 0.5
+local STORE_DELAY = 0.2
 local TP_POSITIONS = {
     Vector3.new(10, 8, -27),
     Vector3.new(12, 7, -13),
