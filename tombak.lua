@@ -1,6 +1,7 @@
 -- ============================================
 -- THROW A SPEAR FOR FISH
 -- Training + Upgrade (100s) + Auto Farm (Throw+Store+TP) + Anti-AFK
+-- + GUI Anti-Hide (Cinematic)
 -- ============================================
 
 local Players = game:GetService("Players")
@@ -26,6 +27,12 @@ if not PullUpTap or not UpgradePullUp or not Throw or not HeldAction then
     warn("[SpearFish] Salah satu remote tidak ditemukan!")
     return
 end
+
+-- ===== LOW FX (boost performa) =====
+pcall(function()
+    player:SetAttribute("Setting_LowFx", true)
+    _G.LowFx = true
+end)
 
 -- ===== ANTI AFK (backend) =====
 task.spawn(function()
@@ -107,7 +114,6 @@ end
 
 -- ===== AUTO FARM (Throw + Store + TP) =====
 local function StartAutoFarm()
-    -- Throw loop
     if not throwLoop then
         autoThrow = true
         throwLoop = task.spawn(function()
@@ -121,7 +127,6 @@ local function StartAutoFarm()
         end)
     end
 
-    -- Store loop
     if not storeLoop then
         autoStore = true
         storeLoop = task.spawn(function()
@@ -135,7 +140,6 @@ local function StartAutoFarm()
         end)
     end
 
-    -- TP loop
     if not tpLoop then
         autoTP = true
         tpIndex = 1
@@ -178,6 +182,12 @@ screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 999
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- 🔥 ANTI-HIDE: set attribute Cinematic biar tidak disembunyikan HudVisibility
+pcall(function()
+    screenGui:SetAttribute("Cinematic", true)
+end)
+
 screenGui.Parent = playerGui
 
 -- Bubble
@@ -434,4 +444,4 @@ bubble.InputEnded:Connect(function(input)
     end
 end)
 
-print("[SpearFish] Loaded OK - Training + Upgrade(100s) + AutoFarm(Throw+Store+TP) + AntiAFK")
+print("[SpearFish] Loaded OK - Training + Upgrade(100s) + AutoFarm(Throw+Store+TP) + AntiAFK + LowFx + Anti-Hide")
