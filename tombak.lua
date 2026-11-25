@@ -69,7 +69,7 @@ local TP_POSITIONS = {
     Vector3.new(10, 8, -27),
     Vector3.new(12, 7, -13),
 }
-local TP_DELAY = 0.5
+local TP_DELAY = 0.01
 
 -- ===== AUTO TRAINING =====
 local function StartAutoTraining()
